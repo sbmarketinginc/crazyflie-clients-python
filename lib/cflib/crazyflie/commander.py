@@ -35,6 +35,7 @@ __all__ = ['Commander']
 
 from cflib.crtp.crtpstack import CRTPPacket, CRTPPort
 import struct
+import math
 
 
 class Commander():
@@ -49,6 +50,17 @@ class Commander():
         """
         self._cf = crazyflie
         self._x_mode = False
+        
+        self._compass_mode = False
+        self._compass_heading = 0
+        self._heading_adjustment = 0
+        self._heading_lock_value = 0
+        self._heading_lock_mode = False
+        
+        self._mission_enable = False
+        self._mission_mode = False
+        self._mission_heading_value = 0
+        self._mission_distance_value = 0
 
     def set_client_xmode(self, enabled):
         """
@@ -56,6 +68,34 @@ class Commander():
         the setpoints before sending them to the Crazyflie.
         """
         self._x_mode = enabled
+    
+    def set_client_compass_mode(self, enabled):
+        """Enable/disable the client side compass-mode. When enabled this recalculates the setpoints before sending them to the Crazyflie."""
+        self._compass_mode = enabled
+    
+    def set_client_compass_heading(self, heading):
+        """Set the client side compass heading,"""
+        self._compass_heading = heading
+    
+    def set_heading_lock_mode(self, state):
+        """Set the client side headng lock mode"""
+        self._heading_lock_mode = state
+    
+    def set_heading_lock_value(self, value):
+        """Set the client side headng lock value"""
+        self._heading_lock_value = value
+    
+    def set_mission_enable(self, value):
+        """Set the client side mission enable value"""
+        self._mission_enable = value
+    
+    def set_mission_heading_value(self, value):
+        """Set the client side headng lock value"""
+        self._mission_heading_value = value
+    
+    def set_mission_distance_value(self, value):
+        """Set the client side headng lock value"""
+        self._mission_distance_value = value
 
     def send_setpoint(self, roll, pitch, yaw, thrust):
         """
@@ -64,6 +104,30 @@ class Commander():
         The arguments roll/pitch/yaw/trust is the new setpoints that should
         be sent to the copter
         """
+        
+        if self._heading_lock_mode:
+
+            yaw = self._heading_lock_value - self._compass_heading
+            
+            if yaw > 180:
+                yaw += -360
+            elif yaw < -180:
+                yaw += 360
+            
+            yaw = yaw/2
+            
+            print str(self._compass_heading) + " " + str(self._heading_lock_value) + " " + str(yaw)
+                
+                
+        if self._mission_enable:
+
+            yaw = self._mission_heading_value - self._compass_heading
+                        
+            if yaw > 180:
+                yaw += -360
+            elif yaw < -180:
+                yaw += 360
+        
         if self._x_mode:
             roll = 0.707 * (roll - pitch)
             pitch = 0.707 * (roll + pitch)
