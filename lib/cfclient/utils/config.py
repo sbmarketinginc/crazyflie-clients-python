@@ -30,19 +30,21 @@
 Gives access for reading and writing application configuration parameters
 """
 
-__author__ = 'Bitcraze AB'
-__all__ = ['Config']
-
 import sys
 import json
 import logging
 from .singleton import Singleton
 
+__author__ = 'Bitcraze AB'
+__all__ = ['Config']
+
 logger = logging.getLogger(__name__)
+
 
 class Config():
     """ Singleton class for accessing application configuration """
     __metaclass__ = Singleton
+
     def __init__(self):
         """ Initializes the singleton and reads the config files """
         self._dist_config = sys.path[0] + "/cfclient/configs/config.json"
@@ -78,7 +80,7 @@ class Config():
         elif (key in self._readonly):
             value = self._readonly[key]
         else:
-            raise KeyError("Could not get the paramter [%s]" % key)
+            raise KeyError("Could not get the parameter [%s]" % key)
 
         if (isinstance(value, unicode)):
             value = str(value)

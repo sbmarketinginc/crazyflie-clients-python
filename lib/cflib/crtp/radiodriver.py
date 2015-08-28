@@ -33,11 +33,8 @@ This driver is used to communicate with the Crazyflie using the Crazyradio
 USB dongle.
 """
 
-__author__ = 'Bitcraze AB'
-__all__ = ['RadioDriver']
-
+import collections
 import logging
-logger = logging.getLogger(__name__)
 
 from cflib.crtp.crtpdriver import CRTPDriver
 from .crtpstack import CRTPPacket
@@ -52,9 +49,15 @@ import struct
 from cflib.drivers.crazyradio import Crazyradio
 from usb import USBError
 
+__author__ = 'Bitcraze AB'
+__all__ = ['RadioDriver']
+
+logger = logging.getLogger(__name__)
+
 
 class RadioDriver(CRTPDriver):
     """ Crazyradio link driver """
+
     def __init__(self):
         """ Create the link driver """
         CRTPDriver.__init__(self)
@@ -73,7 +76,7 @@ class RadioDriver(CRTPDriver):
 
         The callback for linkQuality can be called at any moment from the
         driver to report back the link quality in percentage. The
-        callback from linkError will be called when a error occues with
+        callback from linkError will be called when a error occurs with
         an error message.
         """
 
@@ -82,13 +85,12 @@ class RadioDriver(CRTPDriver):
             raise WrongUriType("Not a radio URI")
 
         # Open the USB dongle
-        if not re.search("^radio://([0-9]+)((/([0-9]+))((/(250K|1M|2M))?(/([A-F0-9]+))?)?)?$",
-                         uri):
+        if not re.search("^radio://([0-9]+)((/([0-9]+))"
+                         "((/(250K|1M|2M))?(/([A-F0-9]+))?)?)?$", uri):
             raise WrongUriType('Wrong radio URI format!')
 
         uri_data = re.search("^radio://([0-9]+)((/([0-9]+))"
-                             "((/(250K|1M|2M))?(/([A-F0-9]+))?)?)?$",
-                             uri)
+                             "((/(250K|1M|2M))?(/([A-F0-9]+))?)?)?$", uri)
 
         self.uri = uri
 
@@ -126,7 +128,7 @@ class RadioDriver(CRTPDriver):
         # Prepare the inter-thread communication queue
         self.in_queue = Queue.Queue()
         # Limited size out queue to avoid "ReadBack" effect
-        self.out_queue = Queue.Queue(50)
+        self.out_queue = Queue.Queue(1)
 
         # Launch the comm thread
         self._thread = _RadioDriverThread(self.cradio, self.in_queue,
@@ -200,6 +202,10 @@ class RadioDriver(CRTPDriver):
             pass
         self.cradio = None
 
+        # Clear callbacks
+        self.link_error_callback = None
+        self.link_quality_callback = None
+
     def _scan_radio_channels(self, start=0, stop=125):
         """ Scan for Crazyflies between the supplied channels. """
         return list(self.cradio.scan_channels(start, stop, (0xff,)))
@@ -224,7 +230,7 @@ class RadioDriver(CRTPDriver):
 
             one_to_scan["datarate"] = datarate
 
-            to_scan += (one_to_scan, )
+            to_scan += (one_to_scan,)
 
         found = self.cradio.scan_selected(to_scan, (0xFF, 0xFF, 0xFF))
 
@@ -259,7 +265,7 @@ class RadioDriver(CRTPDriver):
                     serial)
         found = []
 
-        if address != None:
+        if address is not None:
             addr = "{:X}".format(address)
             new_addr = struct.unpack("<BBBBB", binascii.unhexlify(addr))
             self.cradio.set_address(new_addr)
@@ -268,7 +274,7 @@ class RadioDriver(CRTPDriver):
 
         self.cradio.set_data_rate(self.cradio.DR_250KPS)
 
-        if address == None or address == 0xE7E7E7E7E7:
+        if address is None or address == 0xE7E7E7E7E7:
             found += map(lambda c: ["radio://0/{}/250K".format(c), ""],
                          self._scan_radio_channels())
             self.cradio.set_data_rate(self.cradio.DR_1MPS)
@@ -278,14 +284,17 @@ class RadioDriver(CRTPDriver):
             found += map(lambda c: ["radio://0/{}/2M".format(c), ""],
                          self._scan_radio_channels())
         else:
-            found += map(lambda c: ["radio://0/{}/250K/{:X}".format(c, address), ""],
-                         self._scan_radio_channels())
+            found += map(
+                lambda c: ["radio://0/{}/250K/{:X}".format(c, address), ""],
+                self._scan_radio_channels())
             self.cradio.set_data_rate(self.cradio.DR_1MPS)
-            found += map(lambda c: ["radio://0/{}/1M/{:X}".format(c, address), ""],
-                         self._scan_radio_channels())
+            found += map(
+                lambda c: ["radio://0/{}/1M/{:X}".format(c, address), ""],
+                self._scan_radio_channels())
             self.cradio.set_data_rate(self.cradio.DR_2MPS)
-            found += map(lambda c: ["radio://0/{}/2M/{:X}".format(c, address), ""],
-                         self._scan_radio_channels())
+            found += map(
+                lambda c: ["radio://0/{}/2M/{:X}".format(c, address), ""],
+                self._scan_radio_channels())
 
         self.cradio.close()
         self.cradio = None
@@ -297,7 +306,7 @@ class RadioDriver(CRTPDriver):
             try:
                 self.cradio = Crazyradio()
             except USBError as e:
-                return "Cannot open Crazyradio. Permission problem?"\
+                return "Cannot open Crazyradio. Permission problem?" \
                        " ({})".format(str(e))
             except Exception as e:
                 return str(e)
@@ -313,7 +322,7 @@ class RadioDriver(CRTPDriver):
 
 
 # Transmit/receive radio thread
-class _RadioDriverThread (threading.Thread):
+class _RadioDriverThread(threading.Thread):
     """
     Radio link receiver thread used to read data from the
     Crazyradio USB driver. """
@@ -331,6 +340,8 @@ class _RadioDriverThread (threading.Thread):
         self.link_error_callback = link_error_callback
         self.link_quality_callback = link_quality_callback
         self.retryBeforeDisconnect = self.RETRYCOUNT_BEFORE_DISCONNECT
+        self.retries = collections.deque()
+        self.retry_sum = 0
 
     def stop(self):
         """ Stop the thread """
@@ -346,7 +357,7 @@ class _RadioDriverThread (threading.Thread):
         waitTime = 0
         emptyCtr = 0
 
-        while(True):
+        while (True):
             if (self.sp):
                 break
 
@@ -354,10 +365,11 @@ class _RadioDriverThread (threading.Thread):
                 ackStatus = self.cradio.send_packet(dataOut)
             except Exception as e:
                 import traceback
-                self.link_error_callback("Error communicating with crazy radio"
-                                         " ,it has probably been unplugged!\n"
-                                         "Exception:%s\n\n%s" % (e,
-                                         traceback.format_exc()))
+
+                self.link_error_callback(
+                    "Error communicating with crazy radio ,it has probably "
+                    "been unplugged!\nException:%s\n\n%s" % (
+                        e, traceback.format_exc()))
 
             # Analise the in data packet ...
             if ackStatus is None:
@@ -367,7 +379,14 @@ class _RadioDriverThread (threading.Thread):
                 continue
 
             if (self.link_quality_callback is not None):
-                self.link_quality_callback((10 - ackStatus.retry) * 10)
+                # track the mean of a sliding window of the last N packets
+                retry = 10 - ackStatus.retry
+                self.retries.append(retry)
+                self.retry_sum += retry
+                if len(self.retries) > 100:
+                    self.retry_sum -= self.retries.popleft()
+                link_quality = float(self.retry_sum) / len(self.retries) * 10
+                self.link_quality_callback(link_quality)
 
             # If no copter, retry
             if ackStatus.ack is False:

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 #
-#     ||          ____  _ __                           
-#  +------+      / __ )(_) /_______________ _____  ___ 
+#     ||          ____  _ __
+#  +------+      / __ )(_) /_______________ _____  ___
 #  | 0xBC |     / __  / / __/ ___/ ___/ __ `/_  / / _ \
 #  +------+    / /_/ / / /_/ /__/ /  / /_/ / / /_/  __/
 #   ||  ||    /_____/_/\__/\___/_/   \__,_/ /___/\___/
@@ -14,7 +14,7 @@
 #  modify it under the terms of the GNU General Public License
 #  as published by the Free Software Foundation; either version 2
 #  of the License, or (at your option) any later version.
-#  
+#
 #  This program is distributed in the hope that it will be useful,
 #  but WITHOUT ANY WARRANTY; without even the implied warranty of
 #  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
@@ -46,7 +46,7 @@ if os.name == 'posix':
     os.dup2(os.open('/dev/null', os.O_WRONLY), 1)
     sys.stdout = os.fdopen(stdout, 'w')
 
-# set SDL to use the dummy NULL video driver, 
+# set SDL to use the dummy NULL video driver,
 #   so it doesn't need a windowing system.
 os.environ["SDL_VIDEODRIVER"] = "dummy"
 
@@ -70,9 +70,10 @@ LOG_TIMEOUT = 10
 
 logger = logging.getLogger(__name__)
 
-class _SrvThread(Thread):
 
-    def __init__(self, socket, log_socket, param_socket, conn_socket, cf, *args):
+class _SrvThread(Thread):
+    def __init__(self, socket, log_socket, param_socket, conn_socket, cf,
+                 *args):
         super(_SrvThread, self).__init__(*args)
         self._socket = socket
         self._log_socket = log_socket
@@ -134,7 +135,8 @@ class _SrvThread(Thread):
             for name in param_toc[group]:
                 param[group][name] = {
                     "type": param_toc[group][name].ctype,
-                    "access": "RW" if param_toc[group][name].access == 0 else "RO",
+                    "access": "RW" if param_toc[group][
+                        name].access == 0 else "RO",
                     "value": self._cf.param.values[group][name]}
 
         resp = {"version": 1, "status": 0, "log": log, "param": param}
@@ -314,8 +316,8 @@ class ZMQServer():
     def __init__(self, base_url):
         """Start threads and bind ports"""
         cflib.crtp.init_drivers(enable_debug_driver=True)
-        self._cf = Crazyflie(ro_cache=sys.path[0]+"/cflib/cache",
-                             rw_cache=sys.path[1]+"/cache")
+        self._cf = Crazyflie(ro_cache=sys.path[0] + "/cflib/cache",
+                             rw_cache=sys.path[1] + "/cache")
 
         signal.signal(signal.SIGINT, signal.SIG_DFL)
 

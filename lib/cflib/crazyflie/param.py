@@ -27,15 +27,12 @@
 #  MA  02110-1301, USA.
 
 """
-Enableds reading/writing of parameter values to/from the Crazyflie.
+Enables reading/writing of parameter values to/from the Crazyflie.
 
 When a Crazyflie is connected it's possible to download a TableOfContent of all
 the parameters that can be written/read.
 
 """
-
-__author__ = 'Bitcraze AB'
-__all__ = ['Param', 'ParamTocElement']
 
 from cflib.utils.callbacks import Caller
 import struct
@@ -46,9 +43,13 @@ from threading import Thread, Lock
 from Queue import Queue
 
 import logging
+
+__author__ = 'Bitcraze AB'
+__all__ = ['Param', 'ParamTocElement']
+
 logger = logging.getLogger(__name__)
 
-#Possible states
+# Possible states
 IDLE = 0
 WAIT_TOC = 1
 WAIT_READ = 2
@@ -71,17 +72,17 @@ class ParamTocElement:
     RW_ACCESS = 0
     RO_ACCESS = 1
 
-    types = {0x08: ("uint8_t",  '<B'),
+    types = {0x08: ("uint8_t", '<B'),
              0x09: ("uint16_t", '<H'),
              0x0A: ("uint32_t", '<L'),
              0x0B: ("uint64_t", '<Q'),
-             0x00: ("int8_t",   '<b'),
-             0x01: ("int16_t",  '<h'),
-             0x02: ("int32_t",  '<i'),
-             0x03: ("int64_t",  '<q'),
-             0x05: ("FP16",     ''),
-             0x06: ("float",    '<f'),
-             0x07: ("double",   '<d')}
+             0x00: ("int8_t", '<b'),
+             0x01: ("int16_t", '<h'),
+             0x02: ("int32_t", '<i'),
+             0x03: ("int64_t", '<q'),
+             0x05: ("FP16", ''),
+             0x06: ("float", '<f'),
+             0x07: ("double", '<d')}
 
     def __init__(self, data=None):
         """TocElement creator. Data is the binary payload of the element."""
@@ -142,10 +143,10 @@ class Param():
         """Check if all parameters from the TOC has at least been fetched
         once"""
         for g in self.toc.toc:
-            if not g in self.values:
+            if g not in self.values:
                 return False
             for n in self.toc.toc[g]:
-                if not n in self.values[g]:
+                if n not in self.values[g]:
                     return False
 
         return True
@@ -160,7 +161,7 @@ class Param():
             complete_name = "%s.%s" % (element.group, element.name)
 
             # Save the value for synchronous access
-            if not element.group in self.values:
+            if element.group not in self.values:
                 self.values[element.group] = {}
             self.values[element.group][element.name] = s
 
@@ -171,9 +172,11 @@ class Param():
 
             logger.debug("Updated parameter [%s]" % complete_name)
             if complete_name in self.param_update_callbacks:
-                self.param_update_callbacks[complete_name].call(complete_name, s)
+                self.param_update_callbacks[complete_name].call(
+                    complete_name, s)
             if element.group in self.group_update_callbacks:
-                self.group_update_callbacks[element.group].call(complete_name, s)
+                self.group_update_callbacks[element.group].call(
+                    complete_name, s)
             self.all_update_callback.call(complete_name, s)
         else:
             logger.debug("Variable id [%d] not found in TOC", var_id)
@@ -199,12 +202,12 @@ class Param():
         if not group and not name:
             self.all_update_callback.add_callback(cb)
         elif not name:
-            if not group in self.group_update_callbacks:
+            if group not in self.group_update_callbacks:
                 self.group_update_callbacks[group] = Caller()
             self.group_update_callbacks[group].add_callback(cb)
         else:
             paramname = "{}.{}".format(group, name)
-            if not paramname in self.param_update_callbacks:
+            if paramname not in self.param_update_callbacks:
                 self.param_update_callbacks[paramname] = Caller()
             self.param_update_callbacks[paramname].add_callback(cb)
 
@@ -214,8 +217,8 @@ class Param():
         """
         self.toc = Toc()
         toc_fetcher = TocFetcher(self.cf, ParamTocElement,
-                                CRTPPort.PARAM, self.toc,
-                                refresh_done_callback, toc_cache)
+                                 CRTPPort.PARAM, self.toc,
+                                 refresh_done_callback, toc_cache)
         toc_fetcher.start()
 
     def disconnected(self, uri):
@@ -241,7 +244,8 @@ class Param():
                            complete_name)
             raise KeyError("{} not in param TOC".format(complete_name))
         elif element.access == ParamTocElement.RO_ACCESS:
-            logger.debug("[%s] is read only, no trying to set value", complete_name)
+            logger.debug("[%s] is read only, no trying to set value",
+                         complete_name)
             raise AttributeError("{} is read-only!".format(complete_name))
         else:
             varid = element.ident
@@ -255,6 +259,7 @@ class Param():
 class _ParamUpdater(Thread):
     """This thread will update params through a queue to make sure that we
     get back values"""
+
     def __init__(self, cf, updated_callback):
         """Initialize the thread"""
         Thread.__init__(self)
@@ -287,8 +292,8 @@ class _ParamUpdater(Thread):
         """Callback for newly arrived packets"""
         if pk.channel == READ_CHANNEL or pk.channel == WRITE_CHANNEL:
             var_id = pk.datal[0]
-            if (pk.channel != TOC_CHANNEL and self._req_param == var_id
-                and pk is not None):
+            if (pk.channel != TOC_CHANNEL and self._req_param == var_id and
+                    pk is not None):
                 self.updated_callback(pk)
                 self._req_param = -1
                 try:

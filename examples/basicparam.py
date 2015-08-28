@@ -32,25 +32,24 @@ one parameter and reads back it's value. Finally it disconnects.
 """
 
 import sys
-sys.path.append("../lib")
-
-import cflib.crtp
-
 import logging
 import time
 import random
 
-import cflib.crtp
-from cflib.crazyflie import Crazyflie
+sys.path.append("../lib")
+import cflib.crtp  # noqa
+from cflib.crazyflie import Crazyflie  # noqa
 
 # Only output errors from the logging framework
 logging.basicConfig(level=logging.WARNING)
+
 
 class ParamExample:
     """
     Simple logging example class that logs the Stabilizer from a supplied
     link uri and disconnects after 5s.
     """
+
     def __init__(self, link_uri):
         """ Initialize and run the example with the specified link_uri """
 
@@ -146,7 +145,7 @@ class ParamExample:
 
     def _connection_failed(self, link_uri, msg):
         """Callback when connection initial connection fails (i.e no Crazyflie
-        at the speficied address)"""
+        at the specified address)"""
         print "Connection to %s failed: %s" % (link_uri, msg)
         self.is_connected = False
 
@@ -160,6 +159,7 @@ class ParamExample:
         print "Disconnected from %s" % link_uri
         self.is_connected = False
 
+
 if __name__ == '__main__':
     # Initialize the low-level drivers (don't list the debug drivers)
     cflib.crtp.init_drivers(enable_debug_driver=False)
@@ -171,11 +171,11 @@ if __name__ == '__main__':
         print i[0]
 
     if len(available) > 0:
-        #pe = ParamExample(available[0][0])
+        # pe = ParamExample(available[0][0])
         pe = ParamExample("radio://0/90/250K")
-        # The Crazyflie lib doesn't contain anything to keep the application alive,
-        # so this is where your application should do something. In our case we
-        # are just waiting until we are disconnected.
+        # The Crazyflie lib doesn't contain anything to keep the application
+        # alive, so this is where your application should do something. In our
+        # case we are just waiting until we are disconnected.
         while pe.is_connected:
             time.sleep(1)
     else:
