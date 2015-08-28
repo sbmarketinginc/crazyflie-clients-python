@@ -26,19 +26,19 @@
 #  Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston,
 #  MA  02110-1301, USA.
 
-# Crazy Loader bootloader utility
-# Can reset bootload and reset back the bootloader
+#Crazy Loader bootloader utility
+#Can reset bootload and reset back the bootloader
 
 import sys
 import os
 # Fix the path so imports works regardless from where it's run
 sys.path[0] = os.path.join(sys.path[0][:-4], "lib")
 
-import cflib.crtp  # noqa
-from cflib.bootloader import Bootloader  # noqa
-from cflib.bootloader.boottypes import BootVersion, TargetTypes, Target  # noqa
+import cflib.crtp
+from cflib.bootloader import Bootloader
+from cflib.bootloader.boottypes import BootVersion, TargetTypes, Target
 
-# Initialise the CRTP link driver
+#Initialise the CRTP link driver
 link = None
 cload = None
 try:
@@ -50,8 +50,8 @@ except Exception as e:
         link.close()
     sys.exit(-1)
 
-# Set the default parameters
-# Default to Arnaud's copter
+#Set the default parameters
+#Default to the arnaud's copter
 cpu_id = "32:00:6e:06:58:37:35:32:60:58:01:43"
 clink = None
 action = "info"
@@ -68,20 +68,17 @@ if len(sys.argv) < 2:
     print "The CRTP options are described above"
     print
     print "Crazyload option:"
-    print "   info                    : Print the info of the bootloader " \
-          "and quit."
+    print "   info                    : Print the info of the bootloader and quit."
     print "                             Will let the target in bootloader mode"
     print "   reset                   : Reset the device in firmware mode"
-    print "   flash <file> [targets]  : flash the <img> binary file from " \
-          "the first"
-    print "                             possible  page in flash and reset " \
-          "to firmware"
+    print "   flash <file> [targets]  : flash the <img> binary file from the first"
+    print "                             possible  page in flash and reset to firmware"
     print "                             mode."
     if link:
         link.close()
     sys.exit(0)
 
-# Analyse the command line parameters
+#Analyse the command line parameters
 sys.argv = sys.argv[1:]
 argv = []
 
@@ -103,7 +100,7 @@ while i < len(sys.argv):
     i += 1
 sys.argv = argv
 
-# Analyse the command
+#Analyse the command
 if len(sys.argv) < 1:
     action = "info"
 elif sys.argv[0] == "info":
@@ -111,7 +108,7 @@ elif sys.argv[0] == "info":
 elif sys.argv[0] == "reset":
     action = "reset"
 elif sys.argv[0] == "flash":
-    # print len(sys.argv)
+    #print len(sys.argv)
     if len(sys.argv) < 2:
         print "The flash action require a file name."
         link.close()
@@ -122,9 +119,9 @@ elif sys.argv[0] == "flash":
     for t in sys.argv[2:]:
         [target, type] = t.split("-")
         if target in targetnames:
-            targetnames[target] += (type,)
+            targetnames[target] += (type, )
         else:
-            targetnames[target] = (type,)
+            targetnames[target] = (type, )
 else:
     print "Action", sys.argv[0], "unknown!"
     link.close()
@@ -134,13 +131,13 @@ else:
 targets = ()
 
 try:
-    # Initialise the bootloader lib
+    #Initialise the bootloader lib
     bl = Bootloader(clink)
 
     #########################################
     # Get the connection with the bootloader
     #########################################
-    # The connection is done by reseting to the bootloader (default)
+    #The connection is done by reseting to the bootloader (default)
     if boot == "reset":
         print "Reset to bootloader mode ...",
         sys.stdout.flush()
@@ -167,11 +164,12 @@ try:
         bl.protocol_version)
 
     if bl.protocol_version == BootVersion.CF2_PROTO_VER:
-        targets += (bl.get_target(TargetTypes.NRF51),)
-    targets += (bl.get_target(TargetTypes.STM32),)
+        targets += (bl.get_target(TargetTypes.NRF51), )
+    targets += (bl.get_target(TargetTypes.STM32), )
+
 
     ######################################
-    # Doing something (hopefully) useful
+    # Doing something (hopefully) usefull
     ######################################
 
     # Print information about the targets
@@ -191,7 +189,6 @@ try:
         None
 except Exception as e:
     import traceback
-
     traceback.print_exc(file=sys.stdout)
     print e
 

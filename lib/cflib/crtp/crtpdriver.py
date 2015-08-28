@@ -44,7 +44,6 @@ class CRTPDriver:
         """Driver constructor. Throw an exception if the driver is unable to
         open the URI
         """
-        self.needs_resending = True
 
     def connect(self, uri, link_quality_callback, link_error_callback):
         """Connect the driver to a specified URI
@@ -76,7 +75,7 @@ class CRTPDriver:
         Return a human readable name of the interface.
         """
 
-    def scan_interface(self, address=None):
+    def scan_interface(self, address = None):
         """
         Scan interface for available Crazyflie quadcopters and return a list
         with them.

@@ -30,21 +30,21 @@
 USB driver for the Crazyradio USB dongle.
 """
 
-import os
-import usb
-import logging
-
 __author__ = 'Bitcraze AB'
 __all__ = ['Crazyradio']
 
+
+import os
+import usb
+import logging
 logger = logging.getLogger(__name__)
 
-# USB parameters
+#USB parameters
 CRADIO_VID = 0x1915
 CRADIO_PID = 0x7777
 
 # Dongle configuration requests
-# See http://wiki.bitcraze.se/projects:crazyradio:protocol for documentation
+#See http://wiki.bitcraze.se/projects:crazyradio:protocol for documentation
 SET_RADIO_CHANNEL = 0x01
 SET_RADIO_ADDRESS = 0x02
 SET_DATA_RATE = 0x03
@@ -58,11 +58,9 @@ LAUNCH_BOOTLOADER = 0xFF
 
 try:
     import usb.core
-
     pyusb_backend = None
     if os.name == "nt":
         import usb.backend.libusb0 as libusb0
-
         pyusb_backend = libusb0.get_backend()
     pyusb1 = True
 except:
@@ -76,8 +74,7 @@ def _find_devices():
     ret = []
 
     if pyusb1:
-        for d in usb.core.find(idVendor=0x1915, idProduct=0x7777, find_all=1,
-                               backend=pyusb_backend):
+        for d in usb.core.find(idVendor=0x1915, idProduct=0x7777, find_all=1, backend=pyusb_backend):
             ret.append(d)
     else:
         busses = usb.busses()
@@ -99,7 +96,7 @@ class _radio_ack:
 
 class Crazyradio:
     """ Used for communication with the Crazyradio USB dongle """
-    # configuration constants
+    #configuration constants
     DR_250KPS = 0
     DR_1MPS = 1
     DR_2MPS = 2
@@ -122,8 +119,8 @@ class Crazyradio:
         if (pyusb1 is True):
             self.dev.set_configuration(1)
             self.handle = self.dev
-            self.version = float("{0:x}.{1:x}".format(
-                self.dev.bcdDevice >> 8, self.dev.bcdDevice & 0x0FF))
+            self.version = float("{0:x}.{1:x}".format(self.dev.bcdDevice >> 8,
+                                 self.dev.bcdDevice & 0x0FF))
         else:
             self.handle = self.dev.open()
             self.handle.setConfiguration(1)
@@ -136,7 +133,7 @@ class Crazyradio:
         if self.version < 0.4:
             logger.warning("You should update to Crazyradio firmware V0.4+")
 
-        # Reset the dongle to power up settings
+        #Reset the dongle to power up settings
         self.set_data_rate(self.DR_2MPS)
         self.set_channel(2)
         self.arc = -1
@@ -159,7 +156,7 @@ class Crazyradio:
         self.handle = None
         self.dev = None
 
-    # Dongle configuration
+    ### Dongle configuration ###
     def set_channel(self, channel):
         """ Set the radio channel to be used """
         _send_vendor_setup(self.handle, SET_RADIO_CHANNEL, channel, 0, ())
@@ -212,7 +209,7 @@ class Crazyradio:
             _send_vendor_setup(self.handle, SET_CONT_CARRIER, 0, 0, ())
 
     def _has_fw_scan(self):
-        # return self.version >= 0.5
+        #return self.version >= 0.5
         # FIXME: Mitigation for Crazyradio firmware bug #9
         return False
 
@@ -227,13 +224,14 @@ class Crazyradio:
 
         return result
 
+
     def scan_channels(self, start, stop, packet):
-        if self._has_fw_scan():  # Fast firmware-driven scan
+        if self._has_fw_scan():  # Fast firmware-driven scann
             _send_vendor_setup(self.handle, SCANN_CHANNELS, start, stop,
                                packet)
             return tuple(_get_vendor_setup(self.handle, SCANN_CHANNELS,
                                            0, 0, 64))
-        else:  # Slow PC-driven scan
+        else:  # Slow PC-driven scann
             result = tuple()
             for i in range(start, stop + 1):
                 self.set_channel(i)
@@ -242,7 +240,7 @@ class Crazyradio:
                     result = result + (i,)
             return result
 
-    # Data transferts
+    ### Data transferts ###
     def send_packet(self, dataOut):
         """ Send a packet and receive the ack from the radio dongle
             The ack contains information about the packet transmition
@@ -272,7 +270,7 @@ class Crazyradio:
         return ackIn
 
 
-# Private utility functions
+#Private utility functions
 def _send_vendor_setup(handle, request, value, index, data):
     if pyusb1:
         handle.ctrl_transfer(usb.TYPE_VENDOR, request, wValue=value,

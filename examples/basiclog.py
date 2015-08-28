@@ -31,25 +31,26 @@ and prints it to the console. After 10s the application disconnects and exits.
 """
 
 import sys
+sys.path.append("../lib")
+
+import cflib.crtp
+
 import logging
 import time
 from threading import Timer
 
-sys.path.append("../lib")
-import cflib.crtp  # noqa
-from cfclient.utils.logconfigreader import LogConfig  # noqa
-from cflib.crazyflie import Crazyflie  # noqa
+import cflib.crtp
+from cfclient.utils.logconfigreader import LogConfig
+from cflib.crazyflie import Crazyflie
 
 # Only output errors from the logging framework
 logging.basicConfig(level=logging.ERROR)
-
 
 class LoggingExample:
     """
     Simple logging example class that logs the Stabilizer from a supplied
     link uri and disconnects after 5s.
     """
-
     def __init__(self, link_uri):
         """ Initialize and run the example with the specified link_uri """
 
@@ -125,7 +126,6 @@ class LoggingExample:
         """Callback when the Crazyflie is disconnected (called in all cases)"""
         print "Disconnected from %s" % link_uri
         self.is_connected = False
-
 
 if __name__ == '__main__':
     # Initialize the low-level drivers (don't list the debug drivers)

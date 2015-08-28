@@ -31,6 +31,9 @@
 Manager for loading/accesing input device mappings.
 """
 
+__author__ = 'Bitcraze AB/Allyn Bauer'
+__all__ = ['ConfigManager']
+
 import sys
 import json
 import logging
@@ -40,9 +43,6 @@ import copy
 
 from .singleton import Singleton
 from cflib.utils.callbacks import Caller
-
-__author__ = 'Bitcraze AB/Allyn Bauer'
-__all__ = ['ConfigManager']
 
 logger = logging.getLogger(__name__)
 
@@ -65,7 +65,7 @@ class ConfigManager():
             return self._input_config[idx]
         except:
             return None
-
+    
     def get_settings(self, config_name):
         """Get the settings for an input device."""
         try:
@@ -87,15 +87,13 @@ class ConfigManager():
                 json_data = open(self.configs_dir + "/%s" % conf)
                 data = json.load(json_data)
                 new_input_device = {}
-                new_input_settings = {"updateperiod": 10,
-                                      "springythrottle": True}
+                new_input_settings = {"updateperiod":10, "springythrottle":True}
                 for s in data["inputconfig"]["inputdevice"]:
                     if s == "axis":
                         for a in data["inputconfig"]["inputdevice"]["axis"]:
                             axis = {}
                             axis["scale"] = a["scale"]
-                            axis["offset"] = a[
-                                "offset"] if "offset" in a else 0.0
+                            axis["offset"] = a["offset"] if "offset" in a else 0.0
                             axis["type"] = a["type"]
                             axis["key"] = a["key"]
                             axis["name"] = a["name"]
@@ -107,15 +105,13 @@ class ConfigManager():
                                 locaxis = copy.deepcopy(axis)
                                 if "ids" in a:
                                     if id == a["ids"][0]:
-                                        locaxis["scale"] = locaxis[
-                                            "scale"] * -1
+                                        locaxis["scale"] = locaxis["scale"] * -1
                                 locaxis["id"] = id
                                 # 'type'-'id' defines unique index for axis
                                 index = "%s-%d" % (a["type"], id)
                                 new_input_device[index] = locaxis
                     else:
-                        new_input_settings[s] = data[
-                            "inputconfig"]["inputdevice"][s]
+                        new_input_settings[s] = data["inputconfig"]["inputdevice"][s]
                 self._input_config.append(new_input_device)
                 self._input_settings.append(new_input_settings)
                 json_data.close()

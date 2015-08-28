@@ -190,9 +190,6 @@
             </item>
             <item row="5" column="0">
              <widget class="QCheckBox" name="clientXModeCheckbox">
-              <property name="enabled">
-               <bool>false</bool>
-              </property>
               <property name="text">
                <string>Client X-mode</string>
               </property>
@@ -204,7 +201,7 @@
                <bool>false</bool>
               </property>
               <property name="text">
-               <string>Attitude control</string>
+               <string>Attitide control</string>
               </property>
               <property name="checked">
                <bool>true</bool>

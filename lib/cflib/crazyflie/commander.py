@@ -30,12 +30,12 @@
 Used for sending control setpoints to the Crazyflie
 """
 
+__author__ = 'Bitcraze AB'
+__all__ = ['Commander']
+
 from cflib.crtp.crtpstack import CRTPPacket, CRTPPort
 import struct
 import math
-
-__author__ = 'Bitcraze AB'
-__all__ = ['Commander']
 
 
 class Commander():
@@ -99,12 +99,11 @@ class Commander():
 
     def send_setpoint(self, roll, pitch, yaw, thrust):
         """
-        Send a new control setpoint for roll/pitch/yaw/thrust to the copter
+        Send a new control setpoint for roll/pitch/yaw/thust to the copter
 
         The arguments roll/pitch/yaw/trust is the new setpoints that should
         be sent to the copter
         """
-<<<<<<< HEAD
         
         if self._heading_lock_mode:
 
@@ -129,13 +128,9 @@ class Commander():
             elif yaw < -180:
                 yaw += 360
         
-=======
-        if thrust > 0xFFFF or thrust < 0:
-            raise ValueError("Thrust must be between 0 and 0xFFFF")
-
->>>>>>> bitcraze/develop
         if self._x_mode:
-            roll, pitch = 0.707 * (roll - pitch), 0.707 * (roll + pitch)
+            roll = 0.707 * (roll - pitch)
+            pitch = 0.707 * (roll + pitch)
 
         pk = CRTPPacket()
         pk.port = CRTPPort.COMMANDER

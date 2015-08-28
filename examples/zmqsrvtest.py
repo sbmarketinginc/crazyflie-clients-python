@@ -31,16 +31,11 @@ ZMQ server test application. Use CTRL-C to end the application.
 NOTE! If connected to a Crazyflie this will power on the motors!
 """
 
+import zmq
 from threading import Thread
 import signal
 import time
 import sys
-
-try:
-    import zmq
-except ImportError as e:
-    raise Exception("ZMQ library probably not installed ({})".format(e))
-
 
 class _LogThread(Thread):
     def __init__(self, socket, *args):
@@ -61,7 +56,6 @@ class _LogThread(Thread):
             if log["event"] == "deleted":
                 print "Deleted block {}".format(log["name"])
 
-
 class _ParamThread(Thread):
     def __init__(self, socket, *args):
         super(_ParamThread, self).__init__(*args)
@@ -72,7 +66,6 @@ class _ParamThread(Thread):
             param = self._socket.recv_json()
             print param
 
-
 class _ConnThread(Thread):
     def __init__(self, socket, *args):
         super(_ConnThread, self).__init__(*args)
@@ -82,7 +75,6 @@ class _ConnThread(Thread):
         while True:
             msg = self._socket.recv_json()
             print msg
-
 
 class _CtrlThread(Thread):
     def __init__(self, socket, *args):
@@ -105,12 +97,10 @@ class _CtrlThread(Thread):
         while True:
             time.sleep(0.01)
             self._thrust += self._thrust_step
-            if (self._thrust >= self._thrust_max or
-                    self._thrust <= self._thrust_min):
+            if self._thrust >= self._thrust_max or self._thrust <= self._thrust_min:
                 self._thrust_step *= -1
             self._cmd["thrust"] = self._thrust
             self._socket.send_json(self._cmd)
-
 
 signal.signal(signal.SIGINT, signal.SIG_DFL)
 
@@ -194,10 +184,10 @@ print "Parameter variables"
 for group in resp["param"]:
     print "\t{}".format(group)
     for name in resp["param"][group]:
-        print "\t  {} ({}, {})= {}".format(
-            name, resp["param"][group][name]["type"],
-            resp["param"][group][name]["access"],
-            resp["param"][group][name]["value"])
+        print "\t  {} ({}, {})= {}".format(name,
+                                           resp["param"][group][name]["type"],
+                                           resp["param"][group][name]["access"],
+                                           resp["param"][group][name]["value"])
 
 log_cmd = {
     "version": 1,
@@ -285,6 +275,7 @@ if resp["status"] == 0:
     print "done!"
 else:
     print "fail! {}".format(resp["msg"])
+
 
 log_cmd = {
     "version": 1,
