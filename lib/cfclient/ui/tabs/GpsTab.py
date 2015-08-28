@@ -265,7 +265,7 @@ class GpsTab(Tab, gps_tab_class):
             bearing += -360.00
         
         self._waypoint_bearing_box.setText("{}".format(bearing))
-        self.helper.cf.commander.set_mission_heading_value(bearing)
+        self._helper.cf.commander.set_mission_heading_value(bearing)
 
     @pyqtSlot(float, float, int)
     def polygoncomplete(self, lat, lng, i):
